@@ -1,0 +1,23 @@
+{
+  "name": "portfolio-tool",
+  "version": "0.0.1",
+  "description": "A CLI tool to process crypto portfolio value.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jonitjoseph/portfolio-tool.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jonitjoseph/portfolio-tool/issues"
+  },
+  "homepage": "https://github.com/jonitjoseph/portfolio-tool#readme",
+  "dependencies": {
+    "csv-parser": "^3.0.0"
+  }
+}
