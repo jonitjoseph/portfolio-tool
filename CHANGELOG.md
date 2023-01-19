@@ -14,3 +14,10 @@
 ## version 0.0.4
 - updated checks for commander cli options
 - moved csv read to function
+
+## version 0.0.5
+- updated code block if both token and date argument provided
+- updated portfolioValue to parse csv to accept epochTime argument
+- updated getPortfolioValue to accept epochTime argument
+- added getHistoricalExchangeRate function to fetch historical prices for token on given timestamp
+- added current time variable
