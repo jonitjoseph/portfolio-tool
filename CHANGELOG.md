@@ -25,3 +25,7 @@
 ## version 0.0.6
 - resolved the daly in csv parsing
 - updated getHistoricalExchangeRate function 
+
+## version 0.0.7
+- added convertDate function to convert date to epoch
+- added getLatestPortfolioValue function to push latest portfolio value to variable
