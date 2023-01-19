@@ -23,6 +23,7 @@ program
 
 const options = program.opts();
 
+// main function 
 main().then(() => {
     console.log('Thank You!');
 });
@@ -30,11 +31,9 @@ main().then(() => {
 async function main() {
     console.log(figlet.textSync("C P V Tool"));
     const currentTime = Math.floor(Date.now() / 1000);
-    // console.log("now", currentTime);
 
     // executes if only token argument is provided
     if (options.token && !options.date) {
-        // console.log("only token arg");
         await portfolioValue(currentTime);
         const tokenHoldings = await getPortfolioValue(options.token, null);
         console.log(`Latest portfolio value for ${options.token}, current holdings ${portfolio[options.token]}, is ${tokenHoldings}`);
@@ -42,40 +41,39 @@ async function main() {
 
     // executes if only date argument is provided
     if (!options.token && options.date) {
-        // console.log("only date arg");
         const epochTime = await convertDate(options.date);
-        if (currentTime > epochTime) {
-            await portfolioValue(epochTime);
-            console.log(`Portfolio on ${options.date}`, portfolio);
-            const historicalPortfolioValueUSD = await getPortfolioValueTokens(portfolio, epochTime);
-            console.log(`Portfolio value on ${options.date} in USD`, historicalPortfolioValueUSD);
+        if (currentTime < epochTime) {
+            return;
         }
-        // wip
-        // find total worth
+        await portfolioValue(epochTime);
+        console.log(`Portfolio on ${options.date}`, portfolio);
+        const historicalPortfolioValueUSD = await getPortfolioValueTokens(portfolio, epochTime);
+        console.log(`Portfolio value on ${options.date} in USD`, historicalPortfolioValueUSD);
+        const value = Object.values(historicalPortfolioValueUSD);
+        const totalPortfolioWorth = value.reduce((count, val) => count + val, 0);
+        console.log("Total portfolio worth", totalPortfolioWorth);
     }
 
     // executes if no argument is provided
     if (!options.token && !options.date) {
-        // console.log("no argument");
         await portfolioValue(currentTime);
         console.log("Current portfolio :", portfolio);
         const latestPortfolioValueUSD = await getPortfolioValueTokens(portfolio, null);
         console.log("Portfolio value in USD :", latestPortfolioValueUSD);
-        // wip
-        // find total worth
+        const value = Object.values(latestPortfolioValueUSD);
+        const totalPortfolioWorth = value.reduce((count, val) => count + val, 0);
+        console.log("Total portfolio worth", totalPortfolioWorth);
     }
 
     // executes if both token and date argument is provided
     if (options.token && options.date) {
-        // console.log("both argument");
         const epochTime = await convertDate(options.date);
-        if (currentTime > epochTime) {
-            await portfolioValue(epochTime);
-            // console.log("Current portfolio :", portfolio);
-            // console.log("Portfolio for", options.token);
-            const tokenHoldings = await getPortfolioValue(options.token, epochTime);
-            console.log(`Historical portfolio value for ${options.token}, on ${options.date}, for holdings ${portfolio[options.token]}, is ${tokenHoldings}`);
+        if (currentTime < epochTime) {
+            return;
         }
+        await portfolioValue(epochTime);
+        const tokenHoldings = await getPortfolioValue(options.token, epochTime);
+        console.log(`Historical portfolio value for ${options.token}, on ${options.date}, for holdings ${portfolio[options.token]}, is ${tokenHoldings}`);
     }
 }
 
@@ -91,9 +89,8 @@ async function convertDate(date) {
     }
 }
 
-// read the transactions from the CSV file and update the portfolio
+// function to read the transactions from the CSV file and update the portfolio
 async function portfolioValue(epochTime) {
-    // console.log(epochTime);
     try {
         const fileStream = fs.createReadStream(CSV_FILE);
         const parser = csv();
@@ -105,14 +102,11 @@ async function portfolioValue(epochTime) {
                 if (!portfolio[token]) {
                     portfolio[token] = 0;
                 }
-                // console.log(timestamp);
                 if (epochTime > timestamp) {
                     if (transaction_type === 'DEPOSIT') {
                         portfolio[token] += parseFloat(amount);
-                        // console.log("dep",portfolio[token]);
                     } else if (transaction_type === 'WITHDRAWAL') {
                         portfolio[token] -= parseFloat(amount);
-                        // console.log("with",portfolio[token]);
                     }
                 }
             })
@@ -137,7 +131,6 @@ async function getPortfolioValueTokens(latestPortfolio, epochTime) {
 
 // function to get the portfolio value in USD for a given token
 async function getPortfolioValue(token, epochTime) {
-    // console.log(token,epochTime);
     let exchangeRate = 0;
     if (!epochTime) {
         exchangeRate = await getExchangeRate(token);
@@ -145,20 +138,17 @@ async function getPortfolioValue(token, epochTime) {
         exchangeRate = await getHistoricalExchangeRate(token, epochTime);
     }
     let portfolioValueUSD = portfolio[token] * exchangeRate;
-    // console.log(token, portfolioValueUSD);
     return portfolioValueUSD;
 };
 
 // function to get the exchange rate for a given token
 async function getExchangeRate(token) {
     const response = await axios.get(`https://min-api.cryptocompare.com/data/price?fsym=${token}&tsyms=USD`);
-    // console.log(token, response.data.USD);
     return response.data.USD;
 };
 
 // function to get the historical price for a given token
 async function getHistoricalExchangeRate(token, epochTime) {
     const response = await axios.get(`https://min-api.cryptocompare.com/data/pricehistorical?fsym=${token}&tsyms=USD&ts=${epochTime}`);
-    // console.log(token, response.data[token].USD);
     return response.data[token].USD;
 };

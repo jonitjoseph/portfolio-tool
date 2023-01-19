@@ -36,3 +36,7 @@
 - added some checks for date
 - added bin in package.json to make script globally avaliable
 - updated function name of getLatestPortfolioValue to getPortfolioValueTokens
+
+## version 0.0.9
+- removed some console.log statements
+- added feature to calculate total portfolio worth
