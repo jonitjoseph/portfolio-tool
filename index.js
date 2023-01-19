@@ -15,7 +15,7 @@ const program = new Command();
 
 program
     .name("CPV Tool")
-    .version("1.0.0")
+    .version("0.1.0")
     .description("A CLI tool for portfolio valuation")
     .option("-t, --token <value>", "Enter a token to return the latest portfolio value in USD")
     .option("-d, --date <value>", "Enter date(in dd/mm/yyyy format) to return the portfolio value per token in USD")

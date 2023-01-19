@@ -40,3 +40,6 @@
 ## version 0.0.9
 - removed some console.log statements
 - added feature to calculate total portfolio worth
+
+## version 0.1.0
+- added readme.md

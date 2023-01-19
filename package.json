@@ -1,6 +1,6 @@
 {
   "name": "portfolio-tool",
-  "version": "0.0.9",
+  "version": "0.1.0",
   "description": "A CLI tool to process crypto portfolio value.",
   "main": "index.js",
   "scripts": {
