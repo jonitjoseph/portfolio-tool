@@ -15,7 +15,7 @@ const program = new Command();
 
 program
     .name("CPV Tool")
-    .version("0.1.0")
+    .version("0.1.1")
     .description("A CLI tool for portfolio valuation")
     .option("-t, --token <value>", "Enter a token to return the latest portfolio value in USD")
     .option("-d, --date <value>", "Enter date(in dd/mm/yyyy format) to return the portfolio value per token in USD")
@@ -36,6 +36,10 @@ async function main() {
     if (options.token && !options.date) {
         await portfolioValue(currentTime);
         const tokenHoldings = await getPortfolioValue(options.token, null);
+        if (!tokenHoldings) {
+            console.log("Given token doesnot exist in portfolio!");
+            return;
+        }
         console.log(`Latest portfolio value for ${options.token}, current holdings ${portfolio[options.token]}, is ${tokenHoldings}`);
     }
 
@@ -43,6 +47,7 @@ async function main() {
     if (!options.token && options.date) {
         const epochTime = await convertDate(options.date);
         if (currentTime < epochTime) {
+            console.log("The given date is not valid");
             return;
         }
         await portfolioValue(epochTime);
@@ -69,10 +74,15 @@ async function main() {
     if (options.token && options.date) {
         const epochTime = await convertDate(options.date);
         if (currentTime < epochTime) {
+            console.log("The given date is not valid");
             return;
         }
         await portfolioValue(epochTime);
         const tokenHoldings = await getPortfolioValue(options.token, epochTime);
+        if (!tokenHoldings) {
+            console.log("Given token doesnot exist in portfolio!");
+            return;
+        }
         console.log(`Historical portfolio value for ${options.token}, on ${options.date}, for holdings ${portfolio[options.token]}, is ${tokenHoldings}`);
     }
 }

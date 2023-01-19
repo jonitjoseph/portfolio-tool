@@ -43,3 +43,6 @@
 
 ## version 0.1.0
 - added readme.md
+
+## version 0.1.1
+- updated minor checks
