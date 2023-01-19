@@ -1,12 +1,15 @@
+#!/usr/bin/env node
+
 const fs = require('fs');
 const csv = require('csv-parser');
-const axios = require('axios')
+const axios = require('axios');
+const figlet = require("figlet");
 const { Command } = require("commander");
 
 const CSV_FILE = 'transactions.csv';
 
-let portfolio = {};
-let portfolioValueUSD = {};
+const portfolio = {};
+const portfolioValueUSD = {};
 
 const program = new Command();
 
@@ -25,38 +28,38 @@ main().then(() => {
 });
 
 async function main() {
+    console.log(figlet.textSync("C P V Tool"));
     const currentTime = Math.floor(Date.now() / 1000);
-    console.log("now", currentTime);
+    // console.log("now", currentTime);
 
     // executes if only token argument is provided
     if (options.token && !options.date) {
-        console.log("only token arg");
+        // console.log("only token arg");
         await portfolioValue(currentTime);
-        const tokenHoldings = await getPortfolioValue(options.token, null)
+        const tokenHoldings = await getPortfolioValue(options.token, null);
         console.log(`Latest portfolio value for ${options.token}, current holdings ${portfolio[options.token]}, is ${tokenHoldings}`);
     }
 
     // executes if only date argument is provided
     if (!options.token && options.date) {
-        console.log("only date arg");
+        // console.log("only date arg");
         const epochTime = await convertDate(options.date);
         if (currentTime > epochTime) {
-            console.log(epochTime);
+            await portfolioValue(epochTime);
+            console.log(`Portfolio on ${options.date}`, portfolio);
+            const historicalPortfolioValueUSD = await getPortfolioValueTokens(portfolio, epochTime);
+            console.log(`Portfolio value on ${options.date} in USD`, historicalPortfolioValueUSD);
         }
-        await portfolioValue(epochTime);
-        console.log("Current portfolio :", portfolio);
-        const historicalPortfolioValueUSD = await getLatestPortfolioValue(portfolio, epochTime);
-        console.log(historicalPortfolioValueUSD);
         // wip
         // find total worth
     }
 
     // executes if no argument is provided
     if (!options.token && !options.date) {
-        console.log("no argument");
+        // console.log("no argument");
         await portfolioValue(currentTime);
         console.log("Current portfolio :", portfolio);
-        const latestPortfolioValueUSD = await getLatestPortfolioValue(portfolio, null);
+        const latestPortfolioValueUSD = await getPortfolioValueTokens(portfolio, null);
         console.log("Portfolio value in USD :", latestPortfolioValueUSD);
         // wip
         // find total worth
@@ -64,16 +67,15 @@ async function main() {
 
     // executes if both token and date argument is provided
     if (options.token && options.date) {
-        console.log("both argument");
+        // console.log("both argument");
         const epochTime = await convertDate(options.date);
         if (currentTime > epochTime) {
-            console.log(epochTime);
+            await portfolioValue(epochTime);
+            // console.log("Current portfolio :", portfolio);
+            // console.log("Portfolio for", options.token);
+            const tokenHoldings = await getPortfolioValue(options.token, epochTime);
+            console.log(`Historical portfolio value for ${options.token}, on ${options.date}, for holdings ${portfolio[options.token]}, is ${tokenHoldings}`);
         }
-        await portfolioValue(epochTime);
-        console.log("Current portfolio :", portfolio);
-        console.log("portfolio for ", portfolio[options.token]);
-        const tokenHoldings = await getPortfolioValue(options.token, epochTime)
-        console.log(`Historical portfolio value for ${options.token}, holdings ${portfolio[options.token]}, is ${tokenHoldings}`);
     }
 }
 
@@ -81,22 +83,23 @@ async function main() {
 async function convertDate(date) {
     let dateString = date;
     let dateParts = dateString.split("/");
-    // add check for the month value not greater than 12 and date not greater than 31
-    let newDate = new Date(dateParts[2], dateParts[1] - 1, dateParts[0]);
-    let timestamp = newDate.getTime();
-    let epochTime = Math.floor(timestamp / 1000);
-    return epochTime;
+    if (dateParts[2] < 2030 && dateParts[1] < 13 && dateParts[0] < 32) {
+        let newDate = new Date(dateParts[2], dateParts[1] - 1, dateParts[0]);
+        let timestamp = newDate.getTime();
+        let epochTime = Math.floor(timestamp / 1000);
+        return epochTime;
+    }
 }
 
 // read the transactions from the CSV file and update the portfolio
 async function portfolioValue(epochTime) {
-    console.log(epochTime);
+    // console.log(epochTime);
     try {
         const fileStream = fs.createReadStream(CSV_FILE);
         const parser = csv();
         await new Promise((resolve, reject) => {
             fileStream.on('error', reject);
-            fileStream.pipe(parser)
+            fileStream.pipe(parser);
             parser.on('data', (data) => {
                 const { timestamp, transaction_type, token, amount } = data;
                 if (!portfolio[token]) {
@@ -121,8 +124,8 @@ async function portfolioValue(epochTime) {
     return portfolio;
 }
 
-// function to get latest portfolio value per token in USD
-async function getLatestPortfolioValue(latestPortfolio, epochTime) {
+// function to get portfolio value of all tokens in USD
+async function getPortfolioValueTokens(latestPortfolio, epochTime) {
     let tokens = Object.keys(latestPortfolio);
     for (const token of tokens) {
         await getPortfolioValue(token, epochTime).then((data => {

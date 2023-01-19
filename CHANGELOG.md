@@ -29,3 +29,10 @@
 ## version 0.0.7
 - added convertDate function to convert date to epoch
 - added getLatestPortfolioValue function to push latest portfolio value to variable
+
+## version 0.0.8
+- added figlet to diplay tool name in cli
+- added #! to execute the script from cli
+- added some checks for date
+- added bin in package.json to make script globally avaliable
+- updated function name of getLatestPortfolioValue to getPortfolioValueTokens
