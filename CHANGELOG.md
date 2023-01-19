@@ -21,3 +21,7 @@
 - updated getPortfolioValue to accept epochTime argument
 - added getHistoricalExchangeRate function to fetch historical prices for token on given timestamp
 - added current time variable
+
+## version 0.0.6
+- resolved the daly in csv parsing
+- updated getHistoricalExchangeRate function 

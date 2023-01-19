@@ -85,27 +85,34 @@ async function main() {
 // read the transactions from the CSV file and update the portfolio
 async function portfolioValue(epochTime) {
     console.log(epochTime);
-    fs.createReadStream(CSV_FILE)
-        .pipe(csv())
-        .on('data', (data) => {
-            const { timestamp, transaction_type, token, amount } = data;
-            if (!portfolio[token]) {
-                portfolio[token] = 0;
-            }
-            console.log(timestamp);
-            if (epochTime > timestamp) {
-                if (transaction_type === 'DEPOSIT') {
-                    portfolio[token] += parseFloat(amount);
-                    // console.log("dep",portfolio[token]);
-                } else if (transaction_type === 'WITHDRAWAL') {
-                    portfolio[token] -= parseFloat(amount);
-                    // console.log("with",portfolio[token]);
+    try {
+        const fileStream = fs.createReadStream(CSV_FILE);
+        const parser = csv();
+        await new Promise((resolve, reject) => {
+            fileStream.on('error', reject);
+            fileStream.pipe(parser)
+            parser.on('data', (data) => {
+                const { timestamp, transaction_type, token, amount } = data;
+                if (!portfolio[token]) {
+                    portfolio[token] = 0;
                 }
-            }
-        })
-        .on('end', () => {
-            console.log(portfolio);
+                // console.log(timestamp);
+                if (epochTime > timestamp) {
+                    if (transaction_type === 'DEPOSIT') {
+                        portfolio[token] += parseFloat(amount);
+                        // console.log("dep",portfolio[token]);
+                    } else if (transaction_type === 'WITHDRAWAL') {
+                        portfolio[token] -= parseFloat(amount);
+                        // console.log("with",portfolio[token]);
+                    }
+                }
+            })
+            parser.on('end', resolve);
         });
+    } catch (err) {
+        console.error(err);
+    }
+    return portfolio;
 }
 
 // function to get the portfolio value in USD for a given token
@@ -133,5 +140,5 @@ async function getExchangeRate(token) {
 async function getHistoricalExchangeRate(token, epochTime) {
     const response = await axios.get(`https://min-api.cryptocompare.com/data/pricehistorical?fsym=${token}&tsyms=USD&ts=${epochTime}`);
     // console.log(token, response.data[token].USD);
-    return response.data.USD;
+    return response.data[token].USD;
 };
