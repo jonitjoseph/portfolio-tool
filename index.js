@@ -1,6 +1,6 @@
+const fs = require('fs');
 const csv = require('csv-parser');
 const axios = require('axios')
-const fs = require('fs');
 const { Command } = require("commander");
 
 const CSV_FILE = 'transactions.csv';
@@ -23,13 +23,43 @@ main().then(() => {
     console.log('Thank You!');
 });
 
-getPortfolioValue('BTC')
-    .then((value) => {
-        console.log(value);
-    });
-
 async function main() {
-    // read the transactions from the CSV file and update the portfolio
+
+    // executes if only token argument is provided
+    if (options.token && !options.date) {
+        console.log("only token arg");
+        await portfolioValue();
+        const tokenHoldings = await getPortfolioValue(options.token, null)
+        console.log(`Latest portfolio value for ${options.token}, current holdings ${portfolio[options.token]}, is ${tokenHoldings}`);
+    }
+
+    // executes if only date argument is provided
+    if (!options.token && options.date) {
+        console.log("only date arg");
+        let dateString = options.date;
+        let dateParts = dateString.split("/");
+        // add check for the month value not greater than 12 and date not greater than 31
+        let date = new Date(dateParts[2], dateParts[1] - 1, dateParts[0]);
+        let timestamp = date.getTime();
+        let epochTime = Math.floor(timestamp / 1000);
+        console.log(epochTime);
+        await portfolioValue(epochTime);
+        console.log("portfolio", portfolio);
+    }
+
+    // executes if no argument is provided
+    if (!options.token && !options.date) {
+        console.log("no argument");
+    }
+
+    // executes if both date and token argument is provided
+    if (options.token && options.date) {
+        console.log("both argument");
+    }
+}
+
+// read the transactions from the CSV file and update the portfolio
+async function portfolioValue() {
     fs.createReadStream(CSV_FILE)
         .pipe(csv())
         .on('data', (data) => {
@@ -46,31 +76,7 @@ async function main() {
         .on('end', () => {
             console.log(portfolio);
         });
-
-
-    // executes if only token argument is provided
-    if (options.token) {
-        console.log("only token arg");
-    }
-
-    // executes if only date argument is provided
-    if (options.date) {
-        console.log("only date arg");
-    }
-
-    // executes if no argument is provided
-    console.log("no argument");
-
-    // executes if both date and token argument is provided
-    console.log("both argument");
 }
-
-// function to get the exchange rate for a given token
-async function getExchangeRate(token) {
-    const response = await axios.get(`https://min-api.cryptocompare.com/data/price?fsym=${token}&tsyms=USD`);
-    // console.log(token, response.data.USD);
-    return response.data.USD;
-};
 
 // function to get the portfolio value in USD for a given token
 async function getPortfolioValue(token) {
@@ -81,5 +87,9 @@ async function getPortfolioValue(token) {
     return portfolioValueUSD;
 };
 
-// function to get the portfolio value in USD for a given token and date
-
+// function to get the exchange rate for a given token
+async function getExchangeRate(token) {
+    const response = await axios.get(`https://min-api.cryptocompare.com/data/price?fsym=${token}&tsyms=USD`);
+    // console.log(token, response.data.USD);
+    return response.data.USD;
+};

@@ -10,3 +10,7 @@
 
 ## version 0.0.3
 - added commander to display cli options
+
+## version 0.0.4
+- updated checks for commander cli options
+- moved csv read to function
